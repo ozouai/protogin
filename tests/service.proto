@@ -1,0 +1,7 @@
+syntax = "proto3";
+package com.example.protogin.tests;
+option go_package = "github.com/ozouai/protogin/testpb";
+# import "google/api/annotations.proto";
+service TestService {
+    
+}
