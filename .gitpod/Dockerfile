@@ -26,7 +26,7 @@ RUN apt-get update
 RUN wget -q -c https://golang.org/dl/go1.18.2.linux-amd64.tar.gz -O- | tar -C /usr/local -xzvf -
 ENV PATH="/usr/local/go/bin:${PATH}"
 RUN go version
-RUN curl -L -o /tmp/protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip" && (cd /tmp && unzip protoc.zip -d /usr/local) && rm /tmp/protoc.zip
+RUN curl -L -o /tmp/protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip" && (cd /tmp && sudo unzip protoc.zip -d /usr/local && sudo chmod +x /usr/local/bin/protoc) && rm /tmp/protoc.zip
 RUN protoc --version
 ENV HOME="/home/gitpod"
 WORKDIR /tmp/
