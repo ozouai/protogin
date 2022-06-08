@@ -91,11 +91,12 @@ func generateMethod(g *protogen.GeneratedFile, path string, method *protogen.Met
 		// g.P(param[1])
 	}
 	g.P(`engine.`, httpMethod, `("`, ginPath, `", func(ginCtx *gin.Context) {`)
+	g.P("var err error")
 	g.P("mainCtx := ginCtx.Request.Context()")
 	g.P("request := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
 	g.P("var responseString string")
 	if httpMethod == "POST" {
-		g.P("err := jsonpb.Unmarshal(ginCtx.Request.Body, request)")
+		g.P("err = jsonpb.Unmarshal(ginCtx.Request.Body, request)")
 		g.P("if err != nil {")
 		g.P("ginCtx.AbortWithError(400, err)")
 		g.P("return")
@@ -104,7 +105,7 @@ func generateMethod(g *protogen.GeneratedFile, path string, method *protogen.Met
 	for _, param := range params {
 		g.P("request.", param.goName, ` = ginCtx.Param("`, param.field, `")`)
 	}
-	g.P("err := protogingen.ApplyMiddlewareList(mainCtx, handler.", method.GoName, "_Middleware(), func(ctx context.Context) error {")
+	g.P("err = protogingen.ApplyMiddlewareList(mainCtx, handler.", method.GoName, "_Middleware(), func(ctx context.Context) error {")
 	g.P("response, err := handler.", method.GoName, "(ctx, request)")
 	g.P("if err != nil { return err }")
 	g.P("responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)")
