@@ -41,8 +41,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		}
 		g.P("}")
 
-		g.P("func New", service.GoName, "GinServer(handler ", service.GoName, "_GinHandler)*gin.Engine {")
-		g.P("engine := gin.New()")
+		g.P("func New", service.GoName, "GinServer(handler ", service.GoName, "_GinHandler, engine *gin.Engine) {")
 		for _, method := range service.Methods {
 			path := "/" + string(file.Proto.GetPackage()) + "/" + string(service.Desc.Name()) + "/" + string(method.Desc.Name())
 			if proto.HasExtension(method.Desc.Options(), annotations.E_Http) {
@@ -65,7 +64,6 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			}
 
 		}
-		g.P("return engine")
 		g.P("}")
 	}
 

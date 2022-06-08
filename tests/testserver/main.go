@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ozouai/protogin"
 	"github.com/ozouai/protogin/tests/github.com/ozouai/protogin/testpb"
 )
@@ -14,7 +15,8 @@ import (
 func main() {
 
 	handler := &Handler{}
-	engine := testpb.NewTestServiceGinServer(handler)
+	engine := gin.New()
+	testpb.NewTestServiceGinServer(handler, engine)
 	go engine.Run(":8000")
 	timer := time.NewTimer(time.Millisecond * 200)
 	<-timer.C
@@ -64,6 +66,24 @@ func (m *Handler) Second_Middleware() protogin.MiddlewareList {
 }
 
 func (m *Handler) Second(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
+	return &testpb.SecondResponse{
+		Response: "Got ID of " + request.GetId(),
+	}, nil
+}
+
+func (m *Handler) SecondPost_Middleware() protogin.MiddlewareList {
+	return protogin.MiddlewareList{
+		func(ctx context.Context, f func(ctx context.Context) error) error {
+			err := f(ctx)
+			if err != nil {
+				fmt.Println(err)
+			}
+			return err
+		},
+	}
+}
+
+func (m *Handler) SecondPost(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
 	return &testpb.SecondResponse{
 		Response: "Got ID of " + request.GetId(),
 	}, nil

@@ -17,8 +17,7 @@ type TestService_GinHandler interface {
 	SecondPost_Middleware() protogin.MiddlewareList
 }
 
-func NewTestServiceGinServer(handler TestService_GinHandler) *gin.Engine {
-	engine := gin.New()
+func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine) {
 	engine.GET("/first", func(ginCtx *gin.Context) {
 		var err error
 		mainCtx := ginCtx.Request.Context()
@@ -95,5 +94,4 @@ func NewTestServiceGinServer(handler TestService_GinHandler) *gin.Engine {
 		ginCtx.Status(200)
 		ginCtx.Writer.WriteString(responseString)
 	})
-	return engine
 }
