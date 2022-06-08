@@ -53,6 +53,10 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				switch pattern := opts.GetPattern().(type) {
 				case *annotations.HttpRule_Get:
 					generateMethod(g, pattern.Get, method, "GET")
+				case *annotations.HttpRule_Post:
+					generateMethod(g, pattern.Post, method, "POST")
+				case *annotations.HttpRule_Put:
+					generateMethod(g, pattern.Put, method, "PUT")
 				}
 
 			} else {
