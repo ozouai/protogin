@@ -4,6 +4,7 @@ package testpb
 
 import "context"
 import "github.com/gin-gonic/gin"
+import "github.com/ozouai/protogin/protogingen"
 import "github.com/ozouai/protogin"
 import "github.com/golang/protobuf/jsonpb"
 
@@ -20,7 +21,7 @@ func NewTestServiceGinServer(handler TestService_GinHandler) *gin.Engine {
 		mainCtx := ginCtx.Request.Context()
 		request := &FirstRequest{}
 		var responseString string
-		err := protogin.ApplyMiddlewareList(mainCtx, handler.First_Middleware(), func(ctx context.Context) error {
+		err := protogingen.ApplyMiddlewareList(mainCtx, handler.First_Middleware(), func(ctx context.Context) error {
 			response, err := handler.First(ctx, request)
 			if err != nil {
 				return err
@@ -43,7 +44,7 @@ func NewTestServiceGinServer(handler TestService_GinHandler) *gin.Engine {
 		request := &SecondRequest{}
 		var responseString string
 		request.Id = ginCtx.Param("id")
-		err := protogin.ApplyMiddlewareList(mainCtx, handler.Second_Middleware(), func(ctx context.Context) error {
+		err := protogingen.ApplyMiddlewareList(mainCtx, handler.Second_Middleware(), func(ctx context.Context) error {
 			response, err := handler.Second(ctx, request)
 			if err != nil {
 				return err

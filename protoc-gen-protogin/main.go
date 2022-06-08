@@ -30,6 +30,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P("package ", file.GoPackageName)
 	g.P(`import "context"`)
 	g.P(`import "github.com/gin-gonic/gin"`)
+	g.P(`import "github.com/ozouai/protogin/protogingen"`)
 	g.P(`import "github.com/ozouai/protogin"`)
 	g.P(`import "github.com/golang/protobuf/jsonpb"`)
 	for _, service := range file.Services {
@@ -103,7 +104,7 @@ func generateMethod(g *protogen.GeneratedFile, path string, method *protogen.Met
 	for _, param := range params {
 		g.P("request.", param.goName, ` = ginCtx.Param("`, param.field, `")`)
 	}
-	g.P("err := protogin.ApplyMiddlewareList(mainCtx, handler.", method.GoName, "_Middleware(), func(ctx context.Context) error {")
+	g.P("err := protogingen.ApplyMiddlewareList(mainCtx, handler.", method.GoName, "_Middleware(), func(ctx context.Context) error {")
 	g.P("response, err := handler.", method.GoName, "(ctx, request)")
 	g.P("if err != nil { return err }")
 	g.P("responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)")
