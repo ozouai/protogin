@@ -1,7 +1,33 @@
 syntax = "proto3";
 package com.example.protogin.tests;
 option go_package = "github.com/ozouai/protogin/testpb";
-# import "google/api/annotations.proto";
+import "google/api/annotations.proto";
+//import "google/api/annotations.proto";
 service TestService {
-    
+    rpc First(FirstRequest) returns (FirstResponse) {
+      option (google.api.http) = {
+          get: "/first"
+      };  
+    };
+    rpc Second(SecondRequest) returns (SecondResponse) {
+        option (google.api.http) = {
+            get: "/second/{id}"
+        };  
+      };
+}
+
+message FirstRequest {
+
+}
+
+message FirstResponse {
+
+}
+
+message SecondRequest {
+    string id = 1;
+}
+
+message SecondResponse {
+    string response = 1;
 }
