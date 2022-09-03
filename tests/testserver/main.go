@@ -37,54 +37,57 @@ func main() {
 type Handler struct {
 }
 
-func (m *Handler) First_Middleware() protogin.MiddlewareList {
-	return protogin.MiddlewareList{
-		func(ctx context.Context, f func(ctx context.Context) error) error {
-			err := f(ctx)
-			if err != nil {
-				fmt.Println(err)
-			}
-			return err
+func (m *Handler) FirstHandler() testpb.FirstHandler {
+	return testpb.FirstHandler{
+		Middleware: protogin.MiddlewareList{
+			func(ctx context.Context, f func(ctx context.Context) error) error {
+				err := f(ctx)
+				if err != nil {
+					fmt.Println(err)
+				}
+				return err
+			},
+		},
+		Handler: func(ctx context.Context, fr *testpb.FirstRequest) (*testpb.FirstResponse, error) {
+			return &testpb.FirstResponse{}, nil
 		},
 	}
 }
 
-func (m *Handler) First(ctx context.Context, request *testpb.FirstRequest) (*testpb.FirstResponse, error) {
-	return &testpb.FirstResponse{}, nil
-}
-
-func (m *Handler) Second_Middleware() protogin.MiddlewareList {
-	return protogin.MiddlewareList{
-		func(ctx context.Context, f func(ctx context.Context) error) error {
-			err := f(ctx)
-			if err != nil {
-				fmt.Println(err)
-			}
-			return err
+func (m *Handler) SecondHandler() testpb.SecondHandler {
+	return testpb.SecondHandler{
+		Middleware: protogin.MiddlewareList{
+			func(ctx context.Context, f func(ctx context.Context) error) error {
+				err := f(ctx)
+				if err != nil {
+					fmt.Println(err)
+				}
+				return err
+			},
+		},
+		Handler: func(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
+			return &testpb.SecondResponse{
+				Response: "Got ID of " + request.GetId(),
+			}, nil
 		},
 	}
 }
 
-func (m *Handler) Second(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
-	return &testpb.SecondResponse{
-		Response: "Got ID of " + request.GetId(),
-	}, nil
-}
-
-func (m *Handler) SecondPost_Middleware() protogin.MiddlewareList {
-	return protogin.MiddlewareList{
-		func(ctx context.Context, f func(ctx context.Context) error) error {
-			err := f(ctx)
-			if err != nil {
-				fmt.Println(err)
-			}
-			return err
+func (m *Handler) SecondPostHandler() testpb.SecondPostHandler {
+	return testpb.SecondPostHandler{
+		Middleware: protogin.MiddlewareList{
+			func(ctx context.Context, f func(ctx context.Context) error) error {
+				err := f(ctx)
+				if err != nil {
+					fmt.Println(err)
+				}
+				return err
+			},
+		},
+		Handler: func(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
+			return &testpb.SecondResponse{
+				Response: "Got ID of " + request.GetId(),
+			}, nil
 		},
 	}
-}
-
-func (m *Handler) SecondPost(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
-	return &testpb.SecondResponse{
-		Response: "Got ID of " + request.GetId(),
-	}, nil
 }

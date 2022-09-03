@@ -36,13 +36,25 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	for _, service := range file.Services {
 		g.P("type ", service.GoName, "_GinHandler interface {")
 		for _, method := range service.Methods {
-			g.P(method.GoName, "(context.Context, *", g.QualifiedGoIdent(method.Input.GoIdent), ")", " (*", g.QualifiedGoIdent(method.Output.GoIdent), ", error)")
-			g.P(method.GoName, "_Middleware() protogin.MiddlewareList")
+			g.P(method.GoName, "Handler() ", method.GoName, "Handler")
+			//g.P(method.GoName, "(context.Context, *", g.QualifiedGoIdent(method.Input.GoIdent), ")", " (*", g.QualifiedGoIdent(method.Output.GoIdent), ", error)")
+			//g.P(method.GoName, "_Middleware() protogin.MiddlewareList")
 		}
 		g.P("}")
 
+		for _, method := range service.Methods {
+			g.P("type ", method.GoName, "Handler", " struct {")
+			g.P("Middleware protogin.MiddlewareList")
+			g.P("Handler func(context.Context, *", g.QualifiedGoIdent(method.Input.GoIdent), ")", " (*", g.QualifiedGoIdent(method.Output.GoIdent), ", error)")
+			g.P("}")
+		}
+
 		g.P("func New", service.GoName, "GinServer(handler ", service.GoName, "_GinHandler, engine *gin.Engine) {")
 		for _, method := range service.Methods {
+			g.P("{")
+			g.P("declaration := handler.", method.GoName, "Handler()")
+			g.P("f := declaration.Handler")
+			g.P("middleware := declaration.Middleware")
 			path := "/" + string(file.Proto.GetPackage()) + "/" + string(service.Desc.Name()) + "/" + string(method.Desc.Name())
 			if proto.HasExtension(method.Desc.Options(), annotations.E_Http) {
 				ext := proto.GetExtension(method.Desc.Options(), annotations.E_Http)
@@ -62,6 +74,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			} else {
 				generateMethod(g, path, method, "Any")
 			}
+			g.P("}")
 
 		}
 		g.P("}")
@@ -103,8 +116,8 @@ func generateMethod(g *protogen.GeneratedFile, path string, method *protogen.Met
 	for _, param := range params {
 		g.P("request.", param.goName, ` = ginCtx.Param("`, param.field, `")`)
 	}
-	g.P("err = protogingen.ApplyMiddlewareList(mainCtx, handler.", method.GoName, "_Middleware(), func(ctx context.Context) error {")
-	g.P("response, err := handler.", method.GoName, "(ctx, request)")
+	g.P("err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {")
+	g.P("response, err := f", "(ctx, request)")
 	g.P("if err != nil { return err }")
 	g.P("responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)")
 	g.P("if err != nil { return err }")

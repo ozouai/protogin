@@ -9,89 +9,113 @@ import "github.com/ozouai/protogin"
 import "github.com/golang/protobuf/jsonpb"
 
 type TestService_GinHandler interface {
-	First(context.Context, *FirstRequest) (*FirstResponse, error)
-	First_Middleware() protogin.MiddlewareList
-	Second(context.Context, *SecondRequest) (*SecondResponse, error)
-	Second_Middleware() protogin.MiddlewareList
-	SecondPost(context.Context, *SecondRequest) (*SecondResponse, error)
-	SecondPost_Middleware() protogin.MiddlewareList
+	FirstHandler() FirstHandler
+	SecondHandler() SecondHandler
+	SecondPostHandler() SecondPostHandler
+}
+type FirstHandler struct {
+	Middleware protogin.MiddlewareList
+	Handler    func(context.Context, *FirstRequest) (*FirstResponse, error)
+}
+type SecondHandler struct {
+	Middleware protogin.MiddlewareList
+	Handler    func(context.Context, *SecondRequest) (*SecondResponse, error)
+}
+type SecondPostHandler struct {
+	Middleware protogin.MiddlewareList
+	Handler    func(context.Context, *SecondRequest) (*SecondResponse, error)
 }
 
 func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine) {
-	engine.GET("/first", func(ginCtx *gin.Context) {
-		var err error
-		mainCtx := ginCtx.Request.Context()
-		request := &FirstRequest{}
-		var responseString string
-		err = protogingen.ApplyMiddlewareList(mainCtx, handler.First_Middleware(), func(ctx context.Context) error {
-			response, err := handler.First(ctx, request)
+	{
+		declaration := handler.FirstHandler()
+		f := declaration.Handler
+		middleware := declaration.Middleware
+		engine.GET("/first", func(ginCtx *gin.Context) {
+			var err error
+			mainCtx := ginCtx.Request.Context()
+			request := &FirstRequest{}
+			var responseString string
+			err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {
+				response, err := f(ctx, request)
+				if err != nil {
+					return err
+				}
+				responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
-				return err
+				ginCtx.AbortWithError(500, err)
+				return
 			}
-			responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)
-			if err != nil {
-				return err
-			}
-			return nil
+			ginCtx.Status(200)
+			ginCtx.Writer.WriteString(responseString)
 		})
-		if err != nil {
-			ginCtx.AbortWithError(500, err)
-			return
-		}
-		ginCtx.Status(200)
-		ginCtx.Writer.WriteString(responseString)
-	})
-	engine.GET("/second/:id", func(ginCtx *gin.Context) {
-		var err error
-		mainCtx := ginCtx.Request.Context()
-		request := &SecondRequest{}
-		var responseString string
-		request.Id = ginCtx.Param("id")
-		err = protogingen.ApplyMiddlewareList(mainCtx, handler.Second_Middleware(), func(ctx context.Context) error {
-			response, err := handler.Second(ctx, request)
+	}
+	{
+		declaration := handler.SecondHandler()
+		f := declaration.Handler
+		middleware := declaration.Middleware
+		engine.GET("/second/:id", func(ginCtx *gin.Context) {
+			var err error
+			mainCtx := ginCtx.Request.Context()
+			request := &SecondRequest{}
+			var responseString string
+			request.Id = ginCtx.Param("id")
+			err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {
+				response, err := f(ctx, request)
+				if err != nil {
+					return err
+				}
+				responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
-				return err
+				ginCtx.AbortWithError(500, err)
+				return
 			}
-			responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)
-			if err != nil {
-				return err
-			}
-			return nil
+			ginCtx.Status(200)
+			ginCtx.Writer.WriteString(responseString)
 		})
-		if err != nil {
-			ginCtx.AbortWithError(500, err)
-			return
-		}
-		ginCtx.Status(200)
-		ginCtx.Writer.WriteString(responseString)
-	})
-	engine.POST("/second/:id", func(ginCtx *gin.Context) {
-		var err error
-		mainCtx := ginCtx.Request.Context()
-		request := &SecondRequest{}
-		var responseString string
-		err = jsonpb.Unmarshal(ginCtx.Request.Body, request)
-		if err != nil {
-			ginCtx.AbortWithError(400, err)
-			return
-		}
-		request.Id = ginCtx.Param("id")
-		err = protogingen.ApplyMiddlewareList(mainCtx, handler.SecondPost_Middleware(), func(ctx context.Context) error {
-			response, err := handler.SecondPost(ctx, request)
+	}
+	{
+		declaration := handler.SecondPostHandler()
+		f := declaration.Handler
+		middleware := declaration.Middleware
+		engine.POST("/second/:id", func(ginCtx *gin.Context) {
+			var err error
+			mainCtx := ginCtx.Request.Context()
+			request := &SecondRequest{}
+			var responseString string
+			err = jsonpb.Unmarshal(ginCtx.Request.Body, request)
 			if err != nil {
-				return err
+				ginCtx.AbortWithError(400, err)
+				return
 			}
-			responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)
+			request.Id = ginCtx.Param("id")
+			err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {
+				response, err := f(ctx, request)
+				if err != nil {
+					return err
+				}
+				responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
 			if err != nil {
-				return err
+				ginCtx.AbortWithError(500, err)
+				return
 			}
-			return nil
+			ginCtx.Status(200)
+			ginCtx.Writer.WriteString(responseString)
 		})
-		if err != nil {
-			ginCtx.AbortWithError(500, err)
-			return
-		}
-		ginCtx.Status(200)
-		ginCtx.Writer.WriteString(responseString)
-	})
+	}
 }
