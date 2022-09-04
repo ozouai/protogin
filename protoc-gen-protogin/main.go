@@ -31,12 +31,13 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P(`import "context"`)
 	g.P(`import "github.com/gin-gonic/gin"`)
 	g.P(`import "github.com/ozouai/protogin/protogingen"`)
+	g.P(`import "github.com/ozouai/protogin/protoginctx"`)
 	g.P(`import "github.com/ozouai/protogin"`)
 	g.P(`import "github.com/golang/protobuf/jsonpb"`)
 	for _, service := range file.Services {
 		g.P("type ", service.GoName, "_GinHandler interface {")
 		for _, method := range service.Methods {
-			g.P(method.GoName, "Handler() ", method.GoName, "Handler")
+			g.P(method.GoName, "() ", method.GoName, "Handler")
 			//g.P(method.GoName, "(context.Context, *", g.QualifiedGoIdent(method.Input.GoIdent), ")", " (*", g.QualifiedGoIdent(method.Output.GoIdent), ", error)")
 			//g.P(method.GoName, "_Middleware() protogin.MiddlewareList")
 		}
@@ -52,7 +53,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		g.P("func New", service.GoName, "GinServer(handler ", service.GoName, "_GinHandler, engine *gin.Engine) {")
 		for _, method := range service.Methods {
 			g.P("{")
-			g.P("declaration := handler.", method.GoName, "Handler()")
+			g.P("declaration := handler.", method.GoName, "()")
 			g.P("f := declaration.Handler")
 			g.P("middleware := declaration.Middleware")
 			path := "/" + string(file.Proto.GetPackage()) + "/" + string(service.Desc.Name()) + "/" + string(method.Desc.Name())
@@ -104,6 +105,7 @@ func generateMethod(g *protogen.GeneratedFile, path string, method *protogen.Met
 	g.P(`engine.`, httpMethod, `("`, ginPath, `", func(ginCtx *gin.Context) {`)
 	g.P("var err error")
 	g.P("mainCtx := ginCtx.Request.Context()")
+	g.P("reqCtx := context.WithValue(mainCtx, protoginctx.GinCtxKey, ginCtx)")
 	g.P("request := &", g.QualifiedGoIdent(method.Input.GoIdent), "{}")
 	g.P("var responseString string")
 	if httpMethod == "POST" {
@@ -116,7 +118,7 @@ func generateMethod(g *protogen.GeneratedFile, path string, method *protogen.Met
 	for _, param := range params {
 		g.P("request.", param.goName, ` = ginCtx.Param("`, param.field, `")`)
 	}
-	g.P("err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {")
+	g.P("err = protogingen.ApplyMiddlewareList(reqCtx, middleware, func(ctx context.Context) error {")
 	g.P("response, err := f", "(ctx, request)")
 	g.P("if err != nil { return err }")
 	g.P("responseString, err = (&jsonpb.Marshaler{}).MarshalToString(response)")

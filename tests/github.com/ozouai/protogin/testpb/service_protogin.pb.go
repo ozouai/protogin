@@ -5,13 +5,14 @@ package testpb
 import "context"
 import "github.com/gin-gonic/gin"
 import "github.com/ozouai/protogin/protogingen"
+import "github.com/ozouai/protogin/protoginctx"
 import "github.com/ozouai/protogin"
 import "github.com/golang/protobuf/jsonpb"
 
 type TestService_GinHandler interface {
-	FirstHandler() FirstHandler
-	SecondHandler() SecondHandler
-	SecondPostHandler() SecondPostHandler
+	First() FirstHandler
+	Second() SecondHandler
+	SecondPost() SecondPostHandler
 }
 type FirstHandler struct {
 	Middleware protogin.MiddlewareList
@@ -28,15 +29,16 @@ type SecondPostHandler struct {
 
 func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine) {
 	{
-		declaration := handler.FirstHandler()
+		declaration := handler.First()
 		f := declaration.Handler
 		middleware := declaration.Middleware
 		engine.GET("/first", func(ginCtx *gin.Context) {
 			var err error
 			mainCtx := ginCtx.Request.Context()
+			reqCtx := context.WithValue(mainCtx, protoginctx.GinCtxKey, ginCtx)
 			request := &FirstRequest{}
 			var responseString string
-			err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {
+			err = protogingen.ApplyMiddlewareList(reqCtx, middleware, func(ctx context.Context) error {
 				response, err := f(ctx, request)
 				if err != nil {
 					return err
@@ -56,16 +58,17 @@ func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine)
 		})
 	}
 	{
-		declaration := handler.SecondHandler()
+		declaration := handler.Second()
 		f := declaration.Handler
 		middleware := declaration.Middleware
 		engine.GET("/second/:id", func(ginCtx *gin.Context) {
 			var err error
 			mainCtx := ginCtx.Request.Context()
+			reqCtx := context.WithValue(mainCtx, protoginctx.GinCtxKey, ginCtx)
 			request := &SecondRequest{}
 			var responseString string
 			request.Id = ginCtx.Param("id")
-			err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {
+			err = protogingen.ApplyMiddlewareList(reqCtx, middleware, func(ctx context.Context) error {
 				response, err := f(ctx, request)
 				if err != nil {
 					return err
@@ -85,12 +88,13 @@ func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine)
 		})
 	}
 	{
-		declaration := handler.SecondPostHandler()
+		declaration := handler.SecondPost()
 		f := declaration.Handler
 		middleware := declaration.Middleware
 		engine.POST("/second/:id", func(ginCtx *gin.Context) {
 			var err error
 			mainCtx := ginCtx.Request.Context()
+			reqCtx := context.WithValue(mainCtx, protoginctx.GinCtxKey, ginCtx)
 			request := &SecondRequest{}
 			var responseString string
 			err = jsonpb.Unmarshal(ginCtx.Request.Body, request)
@@ -99,7 +103,7 @@ func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine)
 				return
 			}
 			request.Id = ginCtx.Param("id")
-			err = protogingen.ApplyMiddlewareList(mainCtx, middleware, func(ctx context.Context) error {
+			err = protogingen.ApplyMiddlewareList(reqCtx, middleware, func(ctx context.Context) error {
 				response, err := f(ctx, request)
 				if err != nil {
 					return err

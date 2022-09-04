@@ -37,7 +37,7 @@ func main() {
 type Handler struct {
 }
 
-func (m *Handler) FirstHandler() testpb.FirstHandler {
+func (m *Handler) First() testpb.FirstHandler {
 	return testpb.FirstHandler{
 		Middleware: protogin.MiddlewareList{
 			func(ctx context.Context, f func(ctx context.Context) error) error {
@@ -54,7 +54,7 @@ func (m *Handler) FirstHandler() testpb.FirstHandler {
 	}
 }
 
-func (m *Handler) SecondHandler() testpb.SecondHandler {
+func (m *Handler) Second() testpb.SecondHandler {
 	return testpb.SecondHandler{
 		Middleware: protogin.MiddlewareList{
 			func(ctx context.Context, f func(ctx context.Context) error) error {
@@ -73,7 +73,7 @@ func (m *Handler) SecondHandler() testpb.SecondHandler {
 	}
 }
 
-func (m *Handler) SecondPostHandler() testpb.SecondPostHandler {
+func (m *Handler) SecondPost() testpb.SecondPostHandler {
 	return testpb.SecondPostHandler{
 		Middleware: protogin.MiddlewareList{
 			func(ctx context.Context, f func(ctx context.Context) error) error {
