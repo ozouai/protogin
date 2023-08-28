@@ -58,6 +58,7 @@ func (m *Handler) Second() testpb.SecondHandler {
 	return testpb.SecondHandler{
 		Middleware: protogin.MiddlewareList{
 			func(ctx context.Context, f func(ctx context.Context) error) error {
+				return protogin.Error403Forbidden(nil, protogin.ResponseJSON(map[string]interface{}{"error": "Unauthenticated"}))
 				err := f(ctx)
 				if err != nil {
 					fmt.Println(err)
@@ -66,6 +67,7 @@ func (m *Handler) Second() testpb.SecondHandler {
 			},
 		},
 		Handler: func(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
+
 			return &testpb.SecondResponse{
 				Response: "Got ID of " + request.GetId(),
 			}, nil
@@ -85,6 +87,7 @@ func (m *Handler) SecondPost() testpb.SecondPostHandler {
 			},
 		},
 		Handler: func(ctx context.Context, request *testpb.SecondRequest) (*testpb.SecondResponse, error) {
+
 			return &testpb.SecondResponse{
 				Response: "Got ID of " + request.GetId(),
 			}, nil

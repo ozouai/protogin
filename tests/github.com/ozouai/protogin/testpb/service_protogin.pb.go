@@ -8,6 +8,7 @@ import "github.com/ozouai/protogin/protogingen"
 import "github.com/ozouai/protogin/protoginctx"
 import "github.com/ozouai/protogin"
 import "github.com/golang/protobuf/jsonpb"
+import "errors"
 
 type TestService_GinHandler interface {
 	First() FirstHandler
@@ -50,8 +51,14 @@ func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine)
 				return nil
 			})
 			if err != nil {
-				ginCtx.AbortWithError(500, err)
-				return
+				pginErr := &protogin.ProtoginError{}
+				if errors.As(err, &pginErr) {
+					pginErr.HTTP(ginCtx)
+					return
+				} else {
+					ginCtx.AbortWithError(500, err)
+					return
+				}
 			}
 			ginCtx.Status(200)
 			ginCtx.Writer.WriteString(responseString)
@@ -80,8 +87,14 @@ func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine)
 				return nil
 			})
 			if err != nil {
-				ginCtx.AbortWithError(500, err)
-				return
+				pginErr := &protogin.ProtoginError{}
+				if errors.As(err, &pginErr) {
+					pginErr.HTTP(ginCtx)
+					return
+				} else {
+					ginCtx.AbortWithError(500, err)
+					return
+				}
 			}
 			ginCtx.Status(200)
 			ginCtx.Writer.WriteString(responseString)
@@ -115,8 +128,14 @@ func NewTestServiceGinServer(handler TestService_GinHandler, engine *gin.Engine)
 				return nil
 			})
 			if err != nil {
-				ginCtx.AbortWithError(500, err)
-				return
+				pginErr := &protogin.ProtoginError{}
+				if errors.As(err, &pginErr) {
+					pginErr.HTTP(ginCtx)
+					return
+				} else {
+					ginCtx.AbortWithError(500, err)
+					return
+				}
 			}
 			ginCtx.Status(200)
 			ginCtx.Writer.WriteString(responseString)

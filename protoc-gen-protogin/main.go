@@ -34,6 +34,7 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.P(`import "github.com/ozouai/protogin/protoginctx"`)
 	g.P(`import "github.com/ozouai/protogin"`)
 	g.P(`import "github.com/golang/protobuf/jsonpb"`)
+	g.P(`import "errors"`)
 	for _, service := range file.Services {
 		g.P("type ", service.GoName, "_GinHandler interface {")
 		for _, method := range service.Methods {
@@ -126,8 +127,14 @@ func generateMethod(g *protogen.GeneratedFile, path string, method *protogen.Met
 	g.P("return nil")
 	g.P("})")
 	g.P("if err != nil {")
+	g.P("pginErr := &protogin.ProtoginError{}")
+	g.P("if errors.As(err, &pginErr) {")
+	g.P("pginErr.HTTP(ginCtx)")
+	g.P("return")
+	g.P("} else {")
 	g.P("ginCtx.AbortWithError(500, err)")
 	g.P("return")
+	g.P("}")
 	g.P("}")
 	g.P("ginCtx.Status(200)")
 	g.P("ginCtx.Writer.WriteString(responseString)")
